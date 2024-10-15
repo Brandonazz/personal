@@ -1,182 +1,550 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Starship Planetary Scanner</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Starship Planetary Scanner and Trading Game</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
     <style>
-        body {
-            background-color: #0a0a0a;
-            color: #00ffcc;
-            font-family: 'Orbitron', sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
+      body {
+        background-color: #0a0a0a;
+        color: #00ffcc;
+        font-family: "Orbitron", sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        overflow: hidden;
+      }
+      #scanner-container {
+        background: linear-gradient(135deg, #001f33, #00334d);
+        border: 2px solid #00ffcc;
+        padding: 20px;
+        width: 800px;
+        box-shadow: 0 0 20px #00ffcc;
+        border-radius: 10px;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        height: 90vh;
+      }
+      #fixed-section {
+        width: 100%;
+        position: relative;
+        flex-shrink: 0;
+      }
+      #space-map {
+        display: grid;
+        grid-template-columns: repeat(20, 1fr);
+        grid-template-rows: repeat(10, 1fr);
+        gap: 2px;
+        width: 100%;
+        height: 300px;
+        margin-bottom: 20px;
+        background-color: #001f33;
+        border: 1px solid #00ffcc;
+      }
+      .cell {
+        background-color: #001b29;
+        width: 100%;
+        height: 100%;
+        border: 1px solid #003a4d;
+        position: relative;
+        cursor: pointer;
+      }
+      .planet {
+        background-color: #00ffcc;
+        position: relative;
+      }
+      .planet[data-planet]::after {
+        content: attr(data-planet);
+        position: absolute;
+        top: -20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: #002b36;
+        padding: 2px 5px;
+        font-size: 0.8em;
+        color: #00ffcc;
+        border: 1px solid #00ffcc;
+        border-radius: 5px;
+        white-space: nowrap;
+        visibility: visible;
+        opacity: 1;
+        z-index: 10;
+      }
+      .highlight {
+        animation: highlight 1s infinite alternate;
+      }
+      .selected {
+        border: 3px solid #00ffcc;
+        box-shadow: 0 0 10px #00ffcc;
+      }
+      @keyframes highlight {
+        0% {
+          background-color: #00ffcc;
         }
-        #scanner-container {
-            background: linear-gradient(135deg, #001f33, #00334d);
-            border: 2px solid #00ffcc;
-            padding: 20px;
-            width: 600px;
-            box-shadow: 0 0 20px #00ffcc;
-            border-radius: 10px;
+        100% {
+          background-color: #003a4d;
         }
-        .button {
-            background-color: #002b36;
-            color: #00ffcc;
-            border: 1px solid #00ffcc;
-            padding: 10px;
-            cursor: pointer;
-            margin-bottom: 10px;
-            transition: background-color 0.3s, transform 0.2s;
-        }
-        .button:hover {
-            background-color: #003a4d;
-            transform: scale(1.05);
-        }
-        #output {
-            margin-top: 20px;
-            padding: 10px;
-            border-top: 1px solid #00ffcc;
-        }
-        .output-header {
-            font-weight: bold;
-            font-size: 1.2em;
-        }
-        .hidden {
-            display: none;
-        }
-        .loading {
-            font-size: 1.2em;
-            color: #00ffcc;
-            animation: blink 1s steps(2, start) infinite;
-        }
-        @keyframes blink {
-            50% {
-                opacity: 0;
-            }
-        }
+      }
+      .button {
+        background-color: #002b36;
+        color: #00ffcc;
+        border: 1px solid #00ffcc;
+        padding: 10px;
+        cursor: pointer;
+        margin-bottom: 10px;
+        transition: background-color 0.3s, transform 0.2s;
+      }
+      .button:hover {
+        background-color: #003a4d;
+        transform: scale(1.05);
+      }
+      .button:active {
+        background-color: #004f66;
+        transform: scale(0.95);
+      }
+      #main-menu,
+      #output {
+        width: 100%;
+        text-align: center;
+        flex-grow: 1;
+        overflow-y: auto;
+      }
+      #output {
+        margin-top: 20px;
+        padding: 10px;
+        border-top: 1px solid #00ffcc;
+      }
+      .output-header {
+        font-weight: bold;
+        font-size: 1.2em;
+      }
+      .hidden {
+        display: none;
+      }
+      .loading {
+        font-size: 1.5em;
+        color: #00ffcc;
+        background-color: #002b36;
+        padding: 20px;
+        border: 2px solid #00ffcc;
+        border-radius: 10px;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        box-shadow: 0 0 20px #00ffcc;
+        z-index: 1000;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+      }
+      td {
+        padding: 5px;
+        border: 1px solid #00ffcc;
+        text-align: left;
+      }
+      td.label {
+        width: 30%;
+        font-weight: bold;
+      }
+      td.value {
+        width: 70%;
+      }
+      .planet::before {
+        content: "O";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        font-size: 2em;
+        color: #00ffcc;
+        transform: translate(-50%, -50%);
+        opacity: 0;
+        transition: opacity 0.3s;
+        pointer-events: none;
+      }
+      .planet:hover::before {
+        opacity: 1;
+      }
+      .planet:active::before {
+        font-size: 1.6em;
+      }
+      #planet-video-container {
+        width: 200px;
+        height: 200px;
+        margin: 20px auto;
+        border: 2px solid #00ffcc;
+        border-radius: 50%;
+        overflow: hidden;
+        box-shadow: 0 0 15px #00ffcc;
+      }
+      #planet-video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      #market-button {
+        margin-top: 10px;
+      }
+      #market-table {
+        margin-top: 20px;
+      }
+      #market-table td {
+        text-align: center;
+      }
+      #inventory {
+        margin-top: 20px;
+        padding: 10px;
+        background-color: #001f33;
+        border: 1px solid #00ffcc;
+      }
+      .trade-button {
+        background-color: #002b36;
+        color: #00ffcc;
+        border: 1px solid #00ffcc;
+        padding: 5px 10px;
+        cursor: pointer;
+        margin: 0 5px;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div id="scanner-container">
-        <h1>Planetary Scanner System</h1>
-        <div id="main-menu">
-            <div class="button" onclick="scanPlanet('Earth'); playSound();">Scan Earth</div>
-            <div class="button" onclick="scanPlanet('Mars'); playSound();">Scan Mars</div>
-            <div class="button" onclick="scanPlanet('Titan'); playSound();">Scan Titan</div>
+      <div id="fixed-section">
+        <h1>Planetary Scanner and Trading System</h1>
+        <div id="space-map"></div>
+      </div>
+      <div id="main-menu">
+        <div class="button" id="earth-button">Scan Earth</div>
+        <div class="button" id="mars-button">Scan Mars</div>
+        <div class="button" id="titan-button">Scan Titan</div>
+      </div>
+      <div id="output" class="hidden">
+        <div class="output-header">Scanning Output</div>
+        <div id="planet-video-container">
+          <video id="planet-video" loop muted autoplay></video>
         </div>
-        <div id="output" class="hidden">
-            <div class="output-header">Scanning Output</div>
-            <div id="loading" class="loading">Scanning in progress<span class="loading">...</span></div>
-            <div id="scan-result" class="hidden"></div>
-            <div class="button" onclick="goBack(); playSound();">Back</div>
+        <div class="button" id="market-button">Market</div>
+        <table id="scan-result">
+          <tr>
+            <td class="label">Planet Name:</td>
+            <td class="value" id="name"></td>
+          </tr>
+          <tr>
+            <td class="label">Population:</td>
+            <td class="value" id="population"></td>
+          </tr>
+          <tr>
+            <td class="label">Atmosphere:</td>
+            <td class="value" id="atmosphere"></td>
+          </tr>
+          <tr>
+            <td class="label">Gravity:</td>
+            <td class="value" id="gravity"></td>
+          </tr>
+          <tr>
+            <td class="label">Orbital Period:</td>
+            <td class="value" id="orbitalPeriod"></td>
+          </tr>
+          <tr>
+            <td class="label">Unique Features:</td>
+            <td class="value" id="uniqueFeatures"></td>
+          </tr>
+        </table>
+        <table id="market-table" class="hidden">
+          <tr>
+            <th>Good</th>
+            <th>Price</th>
+            <th>Action</th>
+          </tr>
+        </table>
+        <div id="inventory">
+          <h3>Inventory</h3>
+          <div id="cargo"></div>
+          <div id="credits"></div>
         </div>
+        <div class="button" id="back-button">Back</div>
+      </div>
     </div>
 
-    <audio id="button-sound" src="https://www.soundjay.com/button/beep-07.wav"></audio>
-
     <script>
-        function playSound() {
-            const sound = document.getElementById('button-sound');
-            sound.play();
+      const spaceMap = document.getElementById("space-map");
+      const planets = {
+        Earth: { position: 84 },
+        Mars: { position: 48 },
+        Titan: { position: 153 },
+      };
+      let currentPlanet = "";
+      let inventory = {
+        fuel: 0,
+        materials: 0,
+        food: 0,
+        labor: 0,
+      };
+      let credits = 1000;
+      let marketPrices = {};
+
+      for (let i = 0; i < 200; i++) {
+        const cell = document.createElement("div");
+        cell.classList.add("cell");
+        spaceMap.appendChild(cell);
+      }
+
+      for (const planet in planets) {
+        const cell = spaceMap.children[planets[planet].position];
+        cell.classList.add("planet");
+        cell.setAttribute("data-planet", planet);
+        cell.addEventListener("click", () => {
+          scanPlanet(planet, cell);
+        });
+      }
+
+      function playButtonSound() {
+        const buttonSound = new Audio("Futuristic_button_pr.mp3");
+        buttonSound.play();
+      }
+
+      document
+        .getElementById("earth-button")
+        .addEventListener("click", () =>
+          scanPlanet("Earth", document.getElementById("earth-button"))
+        );
+      document
+        .getElementById("mars-button")
+        .addEventListener("click", () =>
+          scanPlanet("Mars", document.getElementById("mars-button"))
+        );
+      document
+        .getElementById("titan-button")
+        .addEventListener("click", () =>
+          scanPlanet("Titan", document.getElementById("titan-button"))
+        );
+
+      document.querySelectorAll(".button").forEach((button) => {
+        button.addEventListener("click", playButtonSound);
+      });
+
+      function scanPlanet(planet, button) {
+        currentPlanet = planet;
+        button.classList.add("button:active");
+
+        const loadingPopup = document.createElement("div");
+        loadingPopup.classList.add("loading");
+        loadingPopup.innerHTML = "Processing...";
+        document.body.appendChild(loadingPopup);
+
+        document.getElementById("scan-result").classList.remove("hidden");
+        document.getElementById("market-table").classList.add("hidden");
+
+        const targetPosition = planets[planet].position;
+
+        for (let i = 0; i < 200; i++) {
+          const cell = spaceMap.children[i];
+          cell.classList.remove("highlight", "selected");
+          if (
+            Math.floor(i / 20) === Math.floor(targetPosition / 20) ||
+            i % 20 === targetPosition % 20
+          ) {
+            cell.classList.add("highlight");
+          }
         }
 
-        function scanPlanet(planet) {
-            document.getElementById('loading').classList.remove('hidden');
-            document.getElementById('scan-result').classList.add('hidden');
+        setTimeout(() => {
+          displayScanResults(planet);
+          document.body.removeChild(loadingPopup);
+          button.classList.remove("button:active");
+        }, 2000);
+      }
 
-            setTimeout(() => {
-                let scanData;
-                let asciiArt;
-                switch (planet) {
-                    case 'Earth':
-                        scanData = {
-                            name: 'Earth',
-                            population: '8 billion',
-                            atmosphere: 'Nitrogen-Oxygen',
-                            gravity: '9.8 m/s²',
-                            orbitalPeriod: '365.25 days',
-                            uniqueFeatures: 'Oceans, diverse ecosystems, human civilization'
-                        };
-                        asciiArt = `
-   _____
-  /     \
- |       |
-  \_____/  
-  /_____\ 
- /       \
-`;
-                        break;
-                    case 'Mars':
-                        scanData = {
-                            name: 'Mars',
-                            population: '0 (Potential Human Colonies)',
-                            atmosphere: 'Carbon Dioxide',
-                            gravity: '3.7 m/s²',
-                            orbitalPeriod: '687 days',
-                            uniqueFeatures: 'Iron oxide surface, largest volcano in the solar system (Olympus Mons)'
-                        };
-                        asciiArt = `
-   _____
-  /  _  \
- |  (_)  |
-  \     /
-   \___/ 
-  /_____\
-`;
-                        break;
-                    case 'Titan':
-                        scanData = {
-                            name: 'Titan',
-                            population: '0',
-                            atmosphere: 'Nitrogen-Methane',
-                            gravity: '1.35 m/s²',
-                            orbitalPeriod: '15.95 days',
-                            uniqueFeatures: 'Lakes of liquid methane and ethane, dense atmosphere'
-                        };
-                        asciiArt = `
-   _____
-  /     \
- |  T    |
-  \_____/ 
-  /_____\
-`;
-                        break;
-                    default:
-                        scanData = {};
-                        asciiArt = '';
-                        break;
-                }
-
-                displayScanResults(scanData, asciiArt);
-            }, 2000);
+      function displayScanResults(planet) {
+        let scanData;
+        switch (planet) {
+          case "Earth":
+            scanData = {
+              name: "Earth",
+              population: "8 billion",
+              atmosphere: "Nitrogen-Oxygen",
+              gravity: "9.8 m/s²",
+              orbitalPeriod: "365.25 days",
+              uniqueFeatures: "Oceans, diverse ecosystems, human civilization",
+            };
+            break;
+          case "Mars":
+            scanData = {
+              name: "Mars",
+              population: "0 (Potential Human Colonies)",
+              atmosphere: "Carbon Dioxide",
+              gravity: "3.7 m/s²",
+              orbitalPeriod: "687 days",
+              uniqueFeatures:
+                "Iron oxide surface, largest volcano in the solar system (Olympus Mons)",
+            };
+            break;
+          case "Titan":
+            scanData = {
+              name: "Titan",
+              population: "0",
+              atmosphere: "Nitrogen-Methane",
+              gravity: "1.35 m/s²",
+              orbitalPeriod: "15.95 days",
+              uniqueFeatures:
+                "Lakes of liquid methane and ethane, dense atmosphere",
+            };
+            break;
+          default:
+            scanData = {};
+            break;
         }
 
-        function displayScanResults(data, asciiArt) {
-            const scanResultDiv = document.getElementById('scan-result');
-            scanResultDiv.innerHTML = `
-                <strong>Planet Name:</strong> ${data.name}<br>
-                <strong>Population:</strong> ${data.population}<br>
-                <strong>Atmosphere:</strong> ${data.atmosphere}<br>
-                <strong>Gravity:</strong> ${data.gravity}<br>
-                <strong>Orbital Period:</strong> ${data.orbitalPeriod}<br>
-                <strong>Unique Features:</strong> ${data.uniqueFeatures}<br><br>
-                <pre>${asciiArt}</pre>
-            `;
-            document.getElementById('loading').classList.add('hidden');
-            scanResultDiv.classList.remove('hidden');
-            document.getElementById('main-menu').classList.add('hidden');
-            document.getElementById('output').classList.remove('hidden');
+        const planetVideo = document.getElementById("planet-video");
+        planetVideo.src = `${planet.toLowerCase()}.mp4`;
+        planetVideo.play();
+
+        document.getElementById("name").innerHTML = "";
+        document.getElementById("population").innerHTML = "";
+        document.getElementById("atmosphere").innerHTML = "";
+        document.getElementById("gravity").innerHTML = "";
+        document.getElementById("orbitalPeriod").innerHTML = "";
+        document.getElementById("uniqueFeatures").innerHTML = "";
+
+        document.getElementById("scan-result").classList.remove("hidden");
+        document.getElementById("main-menu").classList.add("hidden");
+        document.getElementById("output").classList.remove("hidden");
+
+        function typeWriter(text, elementId, delay = 50) {
+          const element = document.getElementById(elementId);
+          let i = 0;
+          function type() {
+            if (i < text.length) {
+              element.innerHTML += text.charAt(i);
+              i++;
+              setTimeout(type, delay);
+            }
+          }
+          type();
         }
 
-        function goBack() {
-            document.getElementById('main-menu').classList.remove('hidden');
-            document.getElementById('output').classList.add('hidden');
+        typeWriter(scanData.name, "name");
+        typeWriter(scanData.population, "population");
+        typeWriter(scanData.atmosphere, "atmosphere");
+        typeWriter(scanData.gravity, "gravity");
+        typeWriter(scanData.orbitalPeriod, "orbitalPeriod");
+        typeWriter(scanData.uniqueFeatures, "uniqueFeatures");
+
+        const targetCell = spaceMap.children[planets[planet].position];
+        targetCell.classList.add("highlight", "selected");
+
+        updateInventoryDisplay();
+      }
+
+      function goBack() {
+        document.getElementById("main-menu").classList.remove("hidden");
+        document.getElementById("output").classList.add("hidden");
+
+        const planetVideo = document.getElementById("planet-video");
+        planetVideo.pause();
+        planetVideo.src = "";
+
+        for (let i = 0; i < 200; i++) {
+          spaceMap.children[i].classList.remove("highlight", "selected");
         }
+      }
+
+      document.getElementById("back-button").addEventListener("click", goBack);
+
+      document
+        .getElementById("market-button")
+        .addEventListener("click", showMarket);
+
+      function showMarket() {
+        document.getElementById("scan-result").classList.add("hidden");
+        document.getElementById("market-table").classList.remove("hidden");
+
+        const marketTable = document.getElementById("market-table");
+        marketTable.innerHTML = `
+    <tr>
+      <th>Good</th>
+      <th>Price</th>
+      <th>Action</th>
+    </tr>
+  `;
+
+        const goods = ["fuel", "materials", "food", "labor"];
+        marketPrices[currentPlanet] = marketPrices[currentPlanet] || {};
+
+        goods.forEach((good) => {
+          const price =
+            marketPrices[currentPlanet][good] ||
+            Math.floor(Math.random() * 41) + 10;
+          marketPrices[currentPlanet][good] = price;
+
+          const row = marketTable.insertRow();
+          row.innerHTML = `
+      <td>${good}</td>
+      <td>${price}</td>
+      <td>
+        <button class="trade-button buy-button" data-good="${good}">Buy</button>
+        <button class="trade-button sell-button" data-good="${good}">Sell</button>
+      </td>
+    `;
+        });
+
+        document.querySelectorAll(".buy-button").forEach((button) => {
+          button.addEventListener("click", () => buyGood(button.dataset.good));
+        });
+
+        document.querySelectorAll(".sell-button").forEach((button) => {
+          button.addEventListener("click", () => sellGood(button.dataset.good));
+        });
+
+        updateInventoryDisplay();
+      }
+
+      function buyGood(good) {
+        const price = marketPrices[currentPlanet][good];
+        if (credits >= price) {
+          credits -= price;
+          inventory[good]++;
+          updateInventoryDisplay();
+        } else {
+          alert("Not enough credits!");
+        }
+      }
+
+      function sellGood(good) {
+        if (inventory[good] > 0) {
+          const price = marketPrices[currentPlanet][good];
+          credits += price;
+          inventory[good]--;
+          updateInventoryDisplay();
+        } else {
+          alert("Not enough inventory!");
+        }
+      }
+
+      function updateInventoryDisplay() {
+        const cargoDiv = document.getElementById("cargo");
+        cargoDiv.innerHTML = "";
+        for (const [good, amount] of Object.entries(inventory)) {
+          if (amount > 0) {
+            cargoDiv.innerHTML += `${good}: ${amount}<br>`;
+          }
+        }
+        document.getElementById("credits").textContent = `Credits: ${credits}`;
+      }
+
+      // Initialize the game
+      updateInventoryDisplay();
     </script>
-</body>
+  </body>
 </html>
