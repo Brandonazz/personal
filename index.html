@@ -46,63 +46,117 @@
             font-weight: bold;
             font-size: 1.2em;
         }
+        .hidden {
+            display: none;
+        }
+        .loading {
+            font-size: 1.2em;
+            color: #00ffcc;
+            animation: blink 1s steps(2, start) infinite;
+        }
+        @keyframes blink {
+            50% {
+                opacity: 0;
+            }
+        }
     </style>
 </head>
 <body>
     <div id="scanner-container">
         <h1>Planetary Scanner System</h1>
-        <div class="button" onclick="scanPlanet('Earth')">Scan Earth</div>
-        <div class="button" onclick="scanPlanet('Mars')">Scan Mars</div>
-        <div class="button" onclick="scanPlanet('Titan')">Scan Titan</div>
-        <div id="output">
+        <div id="main-menu">
+            <div class="button" onclick="scanPlanet('Earth'); playSound();">Scan Earth</div>
+            <div class="button" onclick="scanPlanet('Mars'); playSound();">Scan Mars</div>
+            <div class="button" onclick="scanPlanet('Titan'); playSound();">Scan Titan</div>
+        </div>
+        <div id="output" class="hidden">
             <div class="output-header">Scanning Output</div>
-            <div id="scan-result">Select a planet to begin scanning...</div>
+            <div id="loading" class="loading">Scanning in progress<span class="loading">...</span></div>
+            <div id="scan-result" class="hidden"></div>
+            <div class="button" onclick="goBack(); playSound();">Back</div>
         </div>
     </div>
 
-    <script>
-        function scanPlanet(planet) {
-            let scanData;
-            switch (planet) {
-                case 'Earth':
-                    scanData = {
-                        name: 'Earth',
-                        population: '8 billion',
-                        atmosphere: 'Nitrogen-Oxygen',
-                        gravity: '9.8 m/s²',
-                        orbitalPeriod: '365.25 days',
-                        uniqueFeatures: 'Oceans, diverse ecosystems, human civilization'
-                    };
-                    break;
-                case 'Mars':
-                    scanData = {
-                        name: 'Mars',
-                        population: '0 (Potential Human Colonies)',
-                        atmosphere: 'Carbon Dioxide',
-                        gravity: '3.7 m/s²',
-                        orbitalPeriod: '687 days',
-                        uniqueFeatures: 'Iron oxide surface, largest volcano in the solar system (Olympus Mons)'
-                    };
-                    break;
-                case 'Titan':
-                    scanData = {
-                        name: 'Titan',
-                        population: '0',
-                        atmosphere: 'Nitrogen-Methane',
-                        gravity: '1.35 m/s²',
-                        orbitalPeriod: '15.95 days',
-                        uniqueFeatures: 'Lakes of liquid methane and ethane, dense atmosphere'
-                    };
-                    break;
-                default:
-                    scanData = {};
-                    break;
-            }
+    <audio id="button-sound" src="https://www.soundjay.com/button/beep-07.wav"></audio>
 
-            displayScanResults(scanData);
+    <script>
+        function playSound() {
+            const sound = document.getElementById('button-sound');
+            sound.play();
         }
 
-        function displayScanResults(data) {
+        function scanPlanet(planet) {
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('scan-result').classList.add('hidden');
+
+            setTimeout(() => {
+                let scanData;
+                let asciiArt;
+                switch (planet) {
+                    case 'Earth':
+                        scanData = {
+                            name: 'Earth',
+                            population: '8 billion',
+                            atmosphere: 'Nitrogen-Oxygen',
+                            gravity: '9.8 m/s²',
+                            orbitalPeriod: '365.25 days',
+                            uniqueFeatures: 'Oceans, diverse ecosystems, human civilization'
+                        };
+                        asciiArt = `
+   _____
+  /     \
+ |       |
+  \_____/  
+  /_____\ 
+ /       \
+`;
+                        break;
+                    case 'Mars':
+                        scanData = {
+                            name: 'Mars',
+                            population: '0 (Potential Human Colonies)',
+                            atmosphere: 'Carbon Dioxide',
+                            gravity: '3.7 m/s²',
+                            orbitalPeriod: '687 days',
+                            uniqueFeatures: 'Iron oxide surface, largest volcano in the solar system (Olympus Mons)'
+                        };
+                        asciiArt = `
+   _____
+  /  _  \
+ |  (_)  |
+  \     /
+   \___/ 
+  /_____\
+`;
+                        break;
+                    case 'Titan':
+                        scanData = {
+                            name: 'Titan',
+                            population: '0',
+                            atmosphere: 'Nitrogen-Methane',
+                            gravity: '1.35 m/s²',
+                            orbitalPeriod: '15.95 days',
+                            uniqueFeatures: 'Lakes of liquid methane and ethane, dense atmosphere'
+                        };
+                        asciiArt = `
+   _____
+  /     \
+ |  T    |
+  \_____/ 
+  /_____\
+`;
+                        break;
+                    default:
+                        scanData = {};
+                        asciiArt = '';
+                        break;
+                }
+
+                displayScanResults(scanData, asciiArt);
+            }, 2000);
+        }
+
+        function displayScanResults(data, asciiArt) {
             const scanResultDiv = document.getElementById('scan-result');
             scanResultDiv.innerHTML = `
                 <strong>Planet Name:</strong> ${data.name}<br>
@@ -110,8 +164,18 @@
                 <strong>Atmosphere:</strong> ${data.atmosphere}<br>
                 <strong>Gravity:</strong> ${data.gravity}<br>
                 <strong>Orbital Period:</strong> ${data.orbitalPeriod}<br>
-                <strong>Unique Features:</strong> ${data.uniqueFeatures}<br>
+                <strong>Unique Features:</strong> ${data.uniqueFeatures}<br><br>
+                <pre>${asciiArt}</pre>
             `;
+            document.getElementById('loading').classList.add('hidden');
+            scanResultDiv.classList.remove('hidden');
+            document.getElementById('main-menu').classList.add('hidden');
+            document.getElementById('output').classList.remove('hidden');
+        }
+
+        function goBack() {
+            document.getElementById('main-menu').classList.remove('hidden');
+            document.getElementById('output').classList.add('hidden');
         }
     </script>
 </body>
